@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ type Inbound struct {
 }
 
 type Settings struct {
-	Clients []JSONString[ClientSettings] `json:"clients"`
+	Clients []JSONString[Client] `json:"clients"`
 }
 
 // ClientSettings represents settings for a client in inbound.
@@ -32,7 +32,7 @@ type ClientSettings struct {
 	ID         string   `json:"id"`
 	Email      string   `json:"email"`
 	LimitIP    int      `json:"limitIp"`
-	TotalGB    int      `json:"totalGB"`
+	Total      int      `json:"total"`
 	ExpiryTime UnixTime `json:"expiryTime"`
 }
 
@@ -51,16 +51,45 @@ type GetInboundResponse struct {
 	Success bool    `json:"success"`
 }
 
+type GetClientTrafficResponse struct {
+	Obj     Client `json:"obj"`
+	Success bool   `json:"success"`
+}
+
+type GetClientResponse struct {
+	Obj     Client `json:"obj"`
+	Success bool   `json:"success"`
+}
+
+type MessageResponse struct {
+	Obj     Client `json:"obj"`
+	Success bool   `json:"success"`
+	Msg     string `json:"msg"`
+}
+
+type GetClientIpAdressResponse struct {
+	Obj     string `json:"obj"`
+	Success bool   `json:"success"`
+	Msg     string `json:"msg"`
+}
+
 // Client represents a user client.
 type Client struct {
-	ID         string    `json:"id"`
-	Email      string    `json:"email"`
-	LimitIP    int       `json:"limitIp"`
-	TotalGB    int       `json:"totalGB"`
-	ExpiryTime time.Time `json:"expiryTime"`
-	Enable     bool      `json:"enable"`
-	Up         int64     `json:"up"`
-	Down       int64     `json:"down"`
+	Comment    string   `json:"comment"`
+	Email      string   `json:"email"`
+	Enable     bool     `json:"enable"`
+	ExpiryTime UnixTime `json:"expiryTime"`
+	Flow       string   `json:"flow"`
+	UUID       string   `json:"id"`
+	LimitIP    int      `json:"limitIp"`
+	Reset      int16    `json:"reset"`
+	SubId      string   `json:"subId"`
+	TgId       string   `json:"tgId"`
+	TotalGB    int64    `json:"totalGB"`
+	InboundId  *uint    `json:"inboundId"`
+	Up         int64    `json:"up"`
+	Down       int64    `json:"down"`
+	AllTime    int64    `json:"allTime"`
 }
 
 type UnixTime struct {

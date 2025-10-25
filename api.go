@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"bytes"
@@ -12,6 +12,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -116,29 +117,63 @@ func (a *Api) Login(ctx context.Context) error {
 
 // DoRequest is a universal method for API requests.
 func (a *Api) DoRequest(ctx context.Context, method, endpoint string, body, out interface{}) error {
-	url := a.baseURL + apiPrefix + endpoint
+	reqURL := a.baseURL + apiPrefix + endpoint
 	var req *http.Request
 	var err error
 
-	fmt.Println(url)
+	fmt.Println(reqURL)
 
 	switch method {
 	case "GET":
-		req, err = http.NewRequestWithContext(ctx, method, url, nil)
+		req, err = http.NewRequestWithContext(ctx, method, reqURL, nil)
 	case "POST":
 		b, errMarshal := json.Marshal(body)
 		if errMarshal != nil {
 			return errMarshal
 		}
-		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewReader(b))
+		req, err = http.NewRequestWithContext(ctx, method, reqURL, bytes.NewReader(b))
 		req.Header.Set("Content-Type", "application/json")
-	case "PUT", "DELETE":
-		b, errMarshal := json.Marshal(body)
-		if errMarshal != nil {
-			return errMarshal
+	default:
+		return fmt.Errorf("unsupported method: %s", method)
+	}
+	if err != nil {
+		return err
+	}
+
+	resp, err := a.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return &APIError{StatusCode: resp.StatusCode, Message: string(body)}
+	}
+
+	if out != nil {
+		return json.NewDecoder(resp.Body).Decode(out)
+	}
+	return nil
+}
+
+func (a *Api) DoFormDataRequest(ctx context.Context, method, endpoint string, formData map[string]string, out interface{}) error {
+	reqURL := a.baseURL + apiPrefix + endpoint
+	var req *http.Request
+	var err error
+
+	fmt.Println(reqURL)
+
+	switch method {
+	case "GET":
+		req, err = http.NewRequestWithContext(ctx, method, reqURL, nil)
+	case "POST":
+		data := url.Values{}
+		for key, value := range formData {
+			data.Set(key, value)
 		}
-		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewReader(b))
-		req.Header.Set("Content-Type", "application/json")
+		req, err = http.NewRequestWithContext(ctx, method, reqURL, strings.NewReader(data.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	default:
 		return fmt.Errorf("unsupported method: %s", method)
 	}
