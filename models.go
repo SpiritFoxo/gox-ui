@@ -62,12 +62,6 @@ type GetClientResponse struct {
 }
 
 type MessageResponse struct {
-	Obj     Client `json:"obj"`
-	Success bool   `json:"success"`
-	Msg     string `json:"msg"`
-}
-
-type GetClientIpAdressResponse struct {
 	Obj     string `json:"obj"`
 	Success bool   `json:"success"`
 	Msg     string `json:"msg"`
