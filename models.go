@@ -7,40 +7,6 @@ import (
 	"time"
 )
 
-// Inbound represents inbound object with all its parameters.
-type Inbound struct {
-	ID             uint                       `json:"id"`
-	Remark         string                     `json:"remark"`
-	Listen         string                     `json:"listen"`
-	Port           int                        `json:"port"`
-	Protocol       string                     `json:"protocol"`
-	Settings       JSONString[Settings]       `json:"settings"`
-	StreamSettings JSONString[StreamSettings] `json:"streamSettings"`
-	Enable         bool                       `json:"enable"`
-	ExpiryTime     UnixTime                   `json:"expiryTime"`
-	Total          int64                      `json:"total"`
-	Up             int64                      `json:"up"`
-	Down           int64                      `json:"down"`
-}
-
-type Settings struct {
-	Clients []JSONString[Client] `json:"clients"`
-}
-
-// ClientSettings represents settings for a client in inbound.
-type ClientSettings struct {
-	ID         string   `json:"id"`
-	Email      string   `json:"email"`
-	LimitIP    int      `json:"limitIp"`
-	Total      int      `json:"total"`
-	ExpiryTime UnixTime `json:"expiryTime"`
-}
-
-type StreamSettings struct {
-	Network  string `json:"network"`
-	Security string `json:"security"`
-}
-
 type ListInboundsResponse struct {
 	Obj     []Inbound `json:"obj"`
 	Success bool      `json:"success"`
@@ -65,25 +31,6 @@ type MessageResponse struct {
 	Obj     string `json:"obj"`
 	Success bool   `json:"success"`
 	Msg     string `json:"msg"`
-}
-
-// Client represents a user client.
-type Client struct {
-	Comment    string   `json:"comment"`
-	Email      string   `json:"email"`
-	Enable     bool     `json:"enable"`
-	ExpiryTime UnixTime `json:"expiryTime"`
-	Flow       string   `json:"flow"`
-	UUID       string   `json:"id"`
-	LimitIP    int      `json:"limitIp"`
-	Reset      int16    `json:"reset"`
-	SubId      string   `json:"subId"`
-	TgId       string   `json:"tgId"`
-	TotalGB    int64    `json:"totalGB"`
-	InboundId  *uint    `json:"inboundId"`
-	Up         int64    `json:"up"`
-	Down       int64    `json:"down"`
-	AllTime    int64    `json:"allTime"`
 }
 
 type UnixTime struct {

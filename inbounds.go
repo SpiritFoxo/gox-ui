@@ -1,5 +1,30 @@
 package api
 
+// Inbound represents inbound object with all its parameters.
+type Inbound struct {
+	ID             uint                       `json:"id"`
+	Remark         string                     `json:"remark"`
+	Listen         string                     `json:"listen"`
+	Port           int                        `json:"port"`
+	Protocol       string                     `json:"protocol"`
+	Settings       JSONString[Settings]       `json:"settings"`
+	StreamSettings JSONString[StreamSettings] `json:"streamSettings"`
+	Enable         bool                       `json:"enable"`
+	ExpiryTime     UnixTime                   `json:"expiryTime"`
+	Total          int64                      `json:"total"`
+	Up             int64                      `json:"up"`
+	Down           int64                      `json:"down"`
+}
+
+type Settings struct {
+	Clients []JSONString[Client] `json:"clients"`
+}
+
+type StreamSettings struct {
+	Network  string `json:"network"`
+	Security string `json:"security"`
+}
+
 // GetClientByEmail gets most of the client info
 func (i *Inbound) GetClientByEmail(api *Api, email string) *Client {
 	for _, client := range i.Settings.Value.Clients {
