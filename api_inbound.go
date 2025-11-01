@@ -6,17 +6,17 @@ import (
 )
 
 // ListInbounds gets array of all available inbounds from the server
-func (a *Api) ListInbounds(ctx context.Context) (*ListInboundsResponse, error) {
+func (a *Api) ListInbounds(ctx context.Context) (*[]Inbound, error) {
 	var resp ListInboundsResponse
 	endpoint := "inbounds/list"
-	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
+	return &resp.Obj, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
 // GetInbound gets inbound by provided id
-func (a *Api) GetInbound(ctx context.Context, inboundId uint) (*GetInboundResponse, error) {
+func (a *Api) GetInbound(ctx context.Context, inboundId uint) (*Inbound, error) {
 	var resp GetInboundResponse
 	endpoint := fmt.Sprintf("/inbounds/get/%d", inboundId)
-	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
+	return &resp.Obj, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
 // ReserAllTraffic is used to reset the traffic statistics for all inbounds within the system

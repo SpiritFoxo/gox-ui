@@ -11,6 +11,8 @@ import (
 func (a *Api) GetClientTrafficByEmail(ctx context.Context, client *Client) (*GetClientTrafficResponse, error) {
 	var resp GetClientTrafficResponse
 	endpoint := fmt.Sprintf("/inbounds/getClientTraffics/%s", client.Email)
+	client.Up = resp.Obj.Up
+	client.Down = resp.Obj.Down
 	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
@@ -18,6 +20,8 @@ func (a *Api) GetClientTrafficByEmail(ctx context.Context, client *Client) (*Get
 func (a *Api) GetClientTrafficByUUID(ctx context.Context, client *Client) (*GetClientTrafficResponse, error) {
 	var resp GetClientTrafficResponse
 	endpoint := fmt.Sprintf("/inbounds/getClientTrafficsById/%s", client.UUID)
+	client.Up = resp.Obj.Up
+	client.Down = resp.Obj.Down
 	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
@@ -73,10 +77,10 @@ func (a *Api) UpdateClientinfo(ctx context.Context, client *Client) (*MessageRes
 }
 
 // GetClientIpAdress returns clients`s IP adress
-func (a *Api) GetClientIpAdress(ctx context.Context, client *Client) (*MessageResponse, error) {
+func (a *Api) GetClientIpAdress(ctx context.Context, client *Client) (string, error) {
 	var resp MessageResponse
 	endpoint := fmt.Sprintf("/inbounds/clientIps/%s", client.Email)
-	return &resp, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
+	return resp.Obj, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
 }
 
 // ClearClientIps clears IP assigned to a client
