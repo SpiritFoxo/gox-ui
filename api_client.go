@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 )
 
@@ -50,7 +51,7 @@ func (a *Api) AddClient(ctx context.Context, inbound *Inbound, client *Client) (
 // ResetClientTraffic resets client traffic
 func (a *Api) ResetClientTraffic(ctx context.Context, client *Client) (*MessageResponse, error) {
 	var resp MessageResponse
-	endpoint := fmt.Sprintf("/inbounds/%d/resetClientTraffic/%s", *client.InboundId, client.Email)
+	endpoint := fmt.Sprintf("/inbounds/%d/resetClientTraffic/%s", client.InboundId, client.Email)
 	return &resp, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
 }
 
@@ -69,7 +70,7 @@ func (a *Api) UpdateClientinfo(ctx context.Context, client *Client) (*MessageRes
 	}
 
 	formData := map[string]string{
-		"id":       strconv.FormatUint(uint64(*client.InboundId), 10),
+		"id":       strconv.FormatUint(uint64(client.InboundId), 10),
 		"settings": string(settingsJSON),
 	}
 
@@ -93,6 +94,39 @@ func (a *Api) ClearClientIps(ctx context.Context, client *Client) (*MessageRespo
 // DeleteClient deletes client from inbound
 func (a *Api) DeleteClient(ctx context.Context, client *Client) (*MessageResponse, error) {
 	var resp MessageResponse
-	endpoint := fmt.Sprintf("/inbounds/%d/delClient/%s", *client.InboundId, client.UUID)
+	endpoint := fmt.Sprintf("/inbounds/%d/delClient/%s", client.InboundId, client.UUID)
 	return &resp, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
+}
+
+// GetKey generates a key that can be used in suitable software to connect to a VPN
+func (a *Api) GetKey(ctx context.Context, client *Client) (string, error) {
+	inbound, err := a.GetInbound(ctx, client.InboundId)
+	if err != nil {
+		return "", fmt.Errorf("inboud doesnt exist")
+	}
+	u, err := url.Parse(a.config.BaseURL)
+	if err != nil {
+		return "", fmt.Errorf("error parsing domen info")
+	}
+	domain := u.Host
+
+	key := fmt.Sprintf("%s://%s@%s:%d?type=%s&security=%s&pbk=%s&fp=%s&sni=%s&sid=%s&spx=%s&flow=%s#%s-%s", inbound.Protocol, client.UUID, domain, inbound.Port, inbound.StreamSettings.Value.Network, inbound.StreamSettings.Value.Security, inbound.StreamSettings.Value.RealitySettings.Settings.PublicKey, inbound.StreamSettings.Value.RealitySettings.Settings.Fingerprint, inbound.StreamSettings.Value.RealitySettings.ServerNames[0], inbound.StreamSettings.Value.RealitySettings.ShortIds[0], inbound.StreamSettings.Value.RealitySettings.Settings.SpiderX, client.Flow, inbound.Remark, client.Email)
+	return key, nil
+}
+
+// GetSubscriptionLink generates a link that can be used in suitable software to connect to a VPN
+func (a *Api) GetSubscriptionLink(ctx context.Context, client *Client, IsSecure bool) (string, error) {
+	if client.SubId == "" {
+		return "", fmt.Errorf("client doesnt have valid subscription id")
+	}
+	u, err := url.Parse(a.config.BaseURL)
+	if err != nil {
+		return "", fmt.Errorf("error parsing domen info")
+	}
+	domain := "https://" + u.Host
+	if !IsSecure {
+		domain = "http://" + u.Host
+	}
+	link := fmt.Sprintf("%s:%d/sub/%s/%s", domain, a.config.SubscriptionPort, a.config.SubscriptionURI, client.SubId)
+	return link, nil
 }

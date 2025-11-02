@@ -21,8 +21,38 @@ type Settings struct {
 }
 
 type StreamSettings struct {
-	Network  string `json:"network"`
-	Security string `json:"security"`
+	Network         string          `json:"network"`
+	Security        string          `json:"security"`
+	ExternalProxy   []interface{}   `json:"externalProxy"`
+	RealitySettings RealitySettings `json:"realitySettings"`
+	TCPSettings     TCPSettings     `json:"tcpSettings"`
+}
+
+type RealitySettings struct {
+	Show        bool                 `json:"show"`
+	Xver        int                  `json:"xver"`
+	Dest        string               `json:"dest"`
+	ServerNames []string             `json:"serverNames"`
+	PrivateKey  string               `json:"privateKey"`
+	MinClient   string               `json:"minClient"`
+	MaxClient   string               `json:"maxClient"`
+	MaxTimediff int                  `json:"maxTimediff"`
+	ShortIds    []string             `json:"shortIds"`
+	Settings    RealityInnerSettings `json:"settings"`
+}
+
+type RealityInnerSettings struct {
+	PublicKey   string `json:"publicKey"`
+	Fingerprint string `json:"fingerprint"`
+	ServerName  string `json:"serverName"`
+	SpiderX     string `json:"spiderX"`
+}
+
+type TCPSettings struct {
+	AcceptProxyProtocol bool `json:"acceptProxyProtocol"`
+	Header              struct {
+		Type string `json:"type"`
+	} `json:"header"`
 }
 
 // GetClientByEmail gets most of the client info

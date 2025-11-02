@@ -17,17 +17,20 @@ import (
 )
 
 const (
-	defaultPort = 2053
-	apiPrefix   = "/panel/api"
+	defaultPort    = 2053
+	apiPrefix      = "/panel/api"
+	defaultSubPort = 2096
 )
 
 type Config struct {
-	BaseURL    string
-	Username   string
-	Password   string
-	Port       int
-	HTTPClient *http.Client
-	Timeout    time.Duration
+	BaseURL          string
+	Username         string
+	Password         string
+	Port             int
+	SubscriptionURI  string
+	SubscriptionPort int
+	HTTPClient       *http.Client
+	Timeout          time.Duration
 }
 
 type Api struct {
@@ -42,6 +45,9 @@ func NewApi(cfg Config) (*Api, error) {
 	}
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 30 * time.Second
+	}
+	if cfg.SubscriptionPort == 0 {
+		cfg.SubscriptionPort = defaultSubPort
 	}
 	jar, err := cookiejar.New(nil)
 	if err != nil {
