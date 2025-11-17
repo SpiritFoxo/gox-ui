@@ -24,6 +24,7 @@ const (
 
 type Config struct {
 	BaseURL          string
+	IsSecure         bool
 	Username         string
 	Password         string
 	Port             int
@@ -70,6 +71,10 @@ func NewApi(cfg Config) (*Api, error) {
 	u, err := url.Parse(cfg.BaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid baseURL: %w", err)
+	}
+	cfg.IsSecure = false
+	if u.Scheme == "https" {
+		cfg.IsSecure = true
 	}
 	base := u.Scheme + "://" + u.Host + ":" + strconv.Itoa(cfg.Port) + u.Path
 

@@ -3,8 +3,8 @@ package api
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
-	"time"
+
+	"github.com/google/uuid"
 )
 
 // Client represents a user client.
@@ -35,15 +35,12 @@ type ClientSettings struct {
 	ExpiryTime UnixTime `json:"expiryTime"`
 }
 
-func NewClient() (*Client, error) {
-	uuidBytes := make([]byte, 16)
-	if _, err := rand.Read(uuidBytes); err != nil {
-		return nil, errors.New("failed to generate UUID")
-	}
-
-	return &Client{
-		UUID:       hex.EncodeToString(uuidBytes),
-		Enable:     true,
-		ExpiryTime: UnixTime{time.Unix(0, 0).UTC()},
-	}, nil
+func (c *Client) GenerateUUID() error {
+	uid := uuid.New()
+	b := make([]byte, 5)
+	rand.Read(b)
+	subID := hex.EncodeToString(b)
+	c.UUID = uid.String()
+	c.SubId = subID
+	return nil
 }

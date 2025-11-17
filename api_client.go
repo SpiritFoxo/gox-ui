@@ -108,14 +108,12 @@ func (a *Api) GetKey(ctx context.Context, client *Client) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error parsing domen info")
 	}
-	domain := u.Host
-
-	key := fmt.Sprintf("%s://%s@%s:%d?type=%s&security=%s&pbk=%s&fp=%s&sni=%s&sid=%s&spx=%s&flow=%s#%s-%s", inbound.Protocol, client.UUID, domain, inbound.Port, inbound.StreamSettings.Value.Network, inbound.StreamSettings.Value.Security, inbound.StreamSettings.Value.RealitySettings.Settings.PublicKey, inbound.StreamSettings.Value.RealitySettings.Settings.Fingerprint, inbound.StreamSettings.Value.RealitySettings.ServerNames[0], inbound.StreamSettings.Value.RealitySettings.ShortIds[0], inbound.StreamSettings.Value.RealitySettings.Settings.SpiderX, client.Flow, inbound.Remark, client.Email)
+	key := fmt.Sprintf("%s://%s@%s:%d?type=%s&security=%s&pbk=%s&fp=%s&sni=%s&sid=%s&spx=%s&flow=%s#%s-%s", inbound.Protocol, client.UUID, u.Host, inbound.Port, inbound.StreamSettings.Value.Network, inbound.StreamSettings.Value.Security, inbound.StreamSettings.Value.RealitySettings.Settings.PublicKey, inbound.StreamSettings.Value.RealitySettings.Settings.Fingerprint, inbound.StreamSettings.Value.RealitySettings.ServerNames[0], inbound.StreamSettings.Value.RealitySettings.ShortIds[0], inbound.StreamSettings.Value.RealitySettings.Settings.SpiderX, client.Flow, inbound.Remark, client.Email)
 	return key, nil
 }
 
 // GetSubscriptionLink generates a link that can be used in suitable software to connect to a VPN
-func (a *Api) GetSubscriptionLink(ctx context.Context, client *Client, IsSecure bool) (string, error) {
+func (a *Api) GetSubscriptionLink(ctx context.Context, client *Client) (string, error) {
 	if client.SubId == "" {
 		return "", fmt.Errorf("client doesnt have valid subscription id")
 	}
@@ -123,10 +121,6 @@ func (a *Api) GetSubscriptionLink(ctx context.Context, client *Client, IsSecure 
 	if err != nil {
 		return "", fmt.Errorf("error parsing domen info")
 	}
-	domain := "https://" + u.Host
-	if !IsSecure {
-		domain = "http://" + u.Host
-	}
-	link := fmt.Sprintf("%s:%d/sub/%s/%s", domain, a.config.SubscriptionPort, a.config.SubscriptionURI, client.SubId)
+	link := fmt.Sprintf("%s:%d/sub/%s/%s", u.Scheme+"://"+u.Host, a.config.SubscriptionPort, a.config.SubscriptionURI, client.SubId)
 	return link, nil
 }

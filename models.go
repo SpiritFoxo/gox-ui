@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -42,15 +41,16 @@ type JSONString[T any] struct {
 }
 
 func (ut *UnixTime) UnmarshalJSON(b []byte) error {
-	var v int64
-	if err := json.Unmarshal(b, &v); err != nil {
-		return fmt.Errorf("UnixTime: %w", err)
+	var ms float64
+	if err := json.Unmarshal(b, &ms); err == nil {
+		if ms == 0 {
+			ut.Time = time.Time{}
+			return nil
+		}
 	}
-	if v == 0 {
-		ut.Time = time.Time{}
-		return nil
-	}
-	ut.Time = time.Unix(v, 0)
+	secs := int64(ms) / 1000
+	nsecs := int64(ms*1_000_000) % 1_000_000_000
+	ut.Time = time.Unix(secs, nsecs).UTC()
 	return nil
 }
 
@@ -58,7 +58,8 @@ func (ut UnixTime) MarshalJSON() ([]byte, error) {
 	if ut.Time.IsZero() {
 		return []byte("0"), nil
 	}
-	return []byte(strconv.FormatInt(ut.Time.Unix(), 10)), nil
+	ms := ut.Time.Unix()*1000 + int64(ut.Time.Nanosecond())/1_000_000
+	return []byte(strconv.FormatInt(ms, 10)), nil
 }
 
 func (j *JSONString[T]) UnmarshalJSON(b []byte) error {
