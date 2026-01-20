@@ -126,7 +126,7 @@ func (a *Api) Login(ctx context.Context) error {
 	return nil
 }
 
-// SendBAckupTelegram triggers the creation of a system backup and initiates the delivery of the backup file to designated administrators via a configured Telegram bot
+// SendBackupTelegram triggers the creation of a system backup and initiates the delivery of the backup file to designated administrators via a configured Telegram bot
 func (a *Api) SendBackupTelegram(ctx context.Context) (*MessageResponse, error) {
 	var resp MessageResponse
 	endpoint := "/backuptotgbot"
@@ -175,6 +175,7 @@ func (a *Api) DoRequest(ctx context.Context, method, endpoint string, body, out 
 	return nil
 }
 
+// DoFormDataRequest is a universal method for API requests that require form data.
 func (a *Api) DoFormDataRequest(ctx context.Context, method, endpoint string, formData map[string]string, out interface{}) error {
 	reqURL := a.baseURL + apiPrefix + endpoint
 	var req *http.Request
