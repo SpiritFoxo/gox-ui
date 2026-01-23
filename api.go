@@ -84,15 +84,11 @@ func NewApi(cfg Config) (*Api, error) {
 		baseURL:    base,
 	}
 
-	if err := c.Login(context.Background()); err != nil {
-		return nil, fmt.Errorf("login failed: %w", err)
-	}
-
 	return c, nil
 }
 
 // Login performs login to the server and stores response cookie for further access.
-func (a *Api) Login(ctx context.Context) error {
+func (a *Api) Login(ctx context.Context, twoFactorCode ...string) error {
 	loginURL := a.baseURL + "/login"
 
 	var body bytes.Buffer
@@ -100,8 +96,9 @@ func (a *Api) Login(ctx context.Context) error {
 
 	_ = writer.WriteField("username", a.config.Username)
 	_ = writer.WriteField("password", a.config.Password)
-
-	_ = writer.WriteField("twoFactorCode", "")
+	if len(twoFactorCode) > 0 {
+		_ = writer.WriteField("twoFactorCode", twoFactorCode[0])
+	}
 
 	writer.Close()
 
