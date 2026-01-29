@@ -56,7 +56,7 @@ type TCPSettings struct {
 }
 
 // GetClientByEmail gets most of the client info
-func (i *Inbound) GetClientByEmail(api *Api, email string) *Client {
+func (i *Inbound) GetClientByEmail(email string) *Client {
 	for _, client := range i.Settings.Value.Clients {
 		if client.Value.Email == email {
 			return &Client{
