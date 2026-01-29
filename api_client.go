@@ -14,7 +14,7 @@ func (a *Api) GetClientTrafficByEmail(ctx context.Context, client *Client) (*Get
 	endpoint := fmt.Sprintf("/inbounds/getClientTraffics/%s", client.Email)
 	client.Up = resp.Obj.Up
 	client.Down = resp.Obj.Down
-	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
+	return &resp, a.doRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
 // GetClientTrafficByUUID returns amount of downloaded and uploaded data by a client.
@@ -23,7 +23,7 @@ func (a *Api) GetClientTrafficByUUID(ctx context.Context, client *Client) (*GetC
 	endpoint := fmt.Sprintf("/inbounds/getClientTrafficsById/%s", client.UUID)
 	client.Up = resp.Obj.Up
 	client.Down = resp.Obj.Down
-	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
+	return &resp, a.doRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
 // AddClient allows to create new client inside selected inbound.
@@ -45,14 +45,14 @@ func (a *Api) AddClient(ctx context.Context, inbound *Inbound, client *Client) (
 		"settings": string(settingsJSON),
 	}
 
-	return &resp, a.DoFormDataRequest(ctx, "POST", endpoint, formData, &resp)
+	return &resp, a.doFormDataRequest(ctx, "POST", endpoint, formData, &resp)
 }
 
 // ResetClientTraffic resets selected client traffic.
 func (a *Api) ResetClientTraffic(ctx context.Context, client *Client) (*MessageResponse, error) {
 	var resp MessageResponse
 	endpoint := fmt.Sprintf("/inbounds/%d/resetClientTraffic/%s", client.InboundId, client.Email)
-	return &resp, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
+	return &resp, a.doRequest(ctx, "POST", endpoint, nil, &resp)
 }
 
 // UpdateClientInfo updates information about client.
@@ -73,28 +73,28 @@ func (a *Api) UpdateClientInfo(ctx context.Context, client *Client) (*MessageRes
 		"settings": string(settingsJSON),
 	}
 
-	return &resp, a.DoFormDataRequest(ctx, "POST", endpoint, formData, &resp)
+	return &resp, a.doFormDataRequest(ctx, "POST", endpoint, formData, &resp)
 }
 
-// GetClientIpAdress returns clients`s IP adress.
-func (a *Api) GetClientIpAdress(ctx context.Context, client *Client) (string, error) {
+// GetClientIpAddress returns clients`s IP adress.
+func (a *Api) GetClientIpAddress(ctx context.Context, client *Client) (string, error) {
 	var resp MessageResponse
 	endpoint := fmt.Sprintf("/inbounds/clientIps/%s", client.Email)
-	return resp.Obj, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
+	return resp.Obj, a.doRequest(ctx, "POST", endpoint, nil, &resp)
 }
 
 // ClearClientIps clears IP assigned to a client.
 func (a *Api) ClearClientIps(ctx context.Context, client *Client) (*MessageResponse, error) {
 	var resp MessageResponse
 	endpoint := fmt.Sprintf("/inbounds/clearClientIps/%s", client.Email)
-	return &resp, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
+	return &resp, a.doRequest(ctx, "POST", endpoint, nil, &resp)
 }
 
 // DeleteClient deletes client from inbound.
 func (a *Api) DeleteClient(ctx context.Context, client *Client) (*MessageResponse, error) {
 	var resp MessageResponse
 	endpoint := fmt.Sprintf("/inbounds/%d/delClient/%s", client.InboundId, client.UUID)
-	return &resp, a.DoRequest(ctx, "POST", endpoint, nil, &resp)
+	return &resp, a.doRequest(ctx, "POST", endpoint, nil, &resp)
 }
 
 // GetKey generates a key that can be used in suitable software.

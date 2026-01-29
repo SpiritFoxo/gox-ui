@@ -11,13 +11,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	defaultPort    = 2053
 	apiPrefix      = "/panel/api"
 	defaultSubPort = 2096
 )
@@ -27,7 +25,6 @@ type Config struct {
 	IsSecure         bool
 	Username         string
 	Password         string
-	Port             int
 	SubscriptionURI  string
 	SubscriptionPort int
 	HTTPClient       *http.Client
@@ -37,13 +34,9 @@ type Config struct {
 type Api struct {
 	config     Config
 	httpClient *http.Client
-	baseURL    string
 }
 
 func NewApi(cfg Config) (*Api, error) {
-	if cfg.Port == 0 {
-		cfg.Port = defaultPort
-	}
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 30 * time.Second
 	}
@@ -56,7 +49,7 @@ func NewApi(cfg Config) (*Api, error) {
 	}
 	if cfg.HTTPClient == nil {
 		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: cfg.IsSecure,
 		}
 		transport := &http.Transport{
 			TLSClientConfig: tlsConfig,
@@ -76,32 +69,28 @@ func NewApi(cfg Config) (*Api, error) {
 	if u.Scheme == "https" {
 		cfg.IsSecure = true
 	}
-	base := u.Scheme + "://" + u.Host + ":" + strconv.Itoa(cfg.Port) + u.Path
+	cfg.BaseURL = u.Scheme + "://" + u.Host + ":" + u.Port() + u.Path
 
 	c := &Api{
 		config:     cfg,
 		httpClient: cfg.HTTPClient,
-		baseURL:    base,
-	}
-
-	if err := c.Login(context.Background()); err != nil {
-		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
 	return c, nil
 }
 
 // Login performs login to the server and stores response cookie for further access.
-func (a *Api) Login(ctx context.Context) error {
-	loginURL := a.baseURL + "/login"
+func (a *Api) Login(ctx context.Context, twoFactorCode ...string) error {
+	loginURL := a.config.BaseURL + "/login"
 
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 
 	_ = writer.WriteField("username", a.config.Username)
 	_ = writer.WriteField("password", a.config.Password)
-
-	_ = writer.WriteField("twoFactorCode", "")
+	if len(twoFactorCode) > 0 {
+		_ = writer.WriteField("twoFactorCode", twoFactorCode[0])
+	}
 
 	writer.Close()
 
@@ -130,12 +119,12 @@ func (a *Api) Login(ctx context.Context) error {
 func (a *Api) SendBackupTelegram(ctx context.Context) (*MessageResponse, error) {
 	var resp MessageResponse
 	endpoint := "/backuptotgbot"
-	return &resp, a.DoRequest(ctx, "GET", endpoint, nil, &resp)
+	return &resp, a.doRequest(ctx, "GET", endpoint, nil, &resp)
 }
 
-// DoRequest is a universal method for API requests.
-func (a *Api) DoRequest(ctx context.Context, method, endpoint string, body, out interface{}) error {
-	reqURL := a.baseURL + apiPrefix + endpoint
+// doRequest is a universal method for API requests.
+func (a *Api) doRequest(ctx context.Context, method, endpoint string, body, out interface{}) error {
+	reqURL := a.config.BaseURL + apiPrefix + endpoint
 	var req *http.Request
 	var err error
 
@@ -175,9 +164,9 @@ func (a *Api) DoRequest(ctx context.Context, method, endpoint string, body, out 
 	return nil
 }
 
-// DoFormDataRequest is a universal method for API requests that require form data.
-func (a *Api) DoFormDataRequest(ctx context.Context, method, endpoint string, formData map[string]string, out interface{}) error {
-	reqURL := a.baseURL + apiPrefix + endpoint
+// doFormDataRequest is a universal method for API requests that require form data.
+func (a *Api) doFormDataRequest(ctx context.Context, method, endpoint string, formData map[string]string, out interface{}) error {
+	reqURL := a.config.BaseURL + apiPrefix + endpoint
 	var req *http.Request
 	var err error
 
