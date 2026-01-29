@@ -1,22 +1,21 @@
 
-# Gox-ui
+# gox-ui
 
-**gox-ui** — a lightweight, idiomatic Go client library for interacting with **3X-UI** panel.
-
-It provides a clean, type-safe API to manage inbounds, clients, traffic statistics, and subscriptions - everything you need to automate user provisioning, monitor usage, generate configs, or build your own management tools and bots.
-
+**gox-ui** is a lightweight, idiomatic Go client library for interacting with the **3X-UI** panel. It offers a clean, type-safe API to manage inbounds, clients, traffic statistics, and subscriptions—perfect for automating user provisioning, monitoring usage, generating configs, or building custom management tools and bots.
 
 ## Installation
 
-Install library with
+Install the library using:
 
-```go
+```bash
 go get github.com/SpiritFoxo/gox-ui
 ```
-    
-## Usage/Examples
 
-To use API you need to initialize api object
+## Quick Start
+
+### Initialization and Login
+
+Start by importing the library and creating an `Api` instance with your configuration. Then, perform a login to authenticate.
 
 ```go
 package main
@@ -30,183 +29,71 @@ import (
 
 func main() {
 	cfg := api.Config{
-		BaseURL:         "https://your-host.com/your-panel-path",
-		Username:        "admin",
-		Password:        "admin",
-		SubscriptionURI: "your-subscription-path", //optional field. can be left blank if subscription service disabled in panel settings
-		Port:            12345, //optional field, if not provided defaults to 2053
-        SubscriptionPort: 65432, //optional field, if not provided defaults to 2096
+		BaseURL:          "https://your-host.com:2053/your-panel-path",
+		Username:         "admin",
+		Password:         "admin",
+		SubscriptionURI:  "your-subscription-path", // Optional: Leave blank if subscriptions are disabled
+		SubscriptionPort: 2096,                     // Optional: Defaults to 2096
+		// HTTPClient:    &http.Client{},           // Optional: Custom HTTP client
+		// Timeout:       30 * time.Second,         // Optional: Defaults to 30s
 	}
-
 	apiClient, err := api.NewApi(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	ctx := context.Background()
+	err = apiClient.Login(ctx) // Use apiClient.Login(ctx, "123456") if 2FA is enabled
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Now you're ready to use the API!
 }
 ```
 
-Then you will be able to call any other method provided by gox-ui
+### Example: Listing Inbounds
 
-### Getting existing inbound
-```go
-package main
-
-import (
-	"context"
-	"log"
-
-	api "github.com/SpiritFoxo/gox-ui"
-)
-
-func main() {
-	cfg := api.Config{
-		BaseURL:         "https://your-host.com/your-panel-path",
-		Username:        "admin",
-		Password:        "admin",
-		SubscriptionURI: "your-subscription-path",
-		Port:            12345,
-	}
-
-	apiClient, err := api.NewApi(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-    inbound, err := apiClient.GetInbound(ctx, 1) // 1 - needed inbound id. If inbound exists you`ll get full model
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-```
-
-### Getting existing client
-```go
-package main
-
-import (
-	"context"
-	"log"
-
-	api "github.com/SpiritFoxo/gox-ui"
-)
-
-func main() {
-	cfg := api.Config{
-		BaseURL:         "https://your-host.com/your-panel-path",
-		Username:        "admin",
-		Password:        "admin",
-		SubscriptionURI: "your-subscription-path",
-		Port:            12345,
-	}
-
-	apiClient, err := api.NewApi(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-    //in order to get client you need to get inbound first
-    inbound, err := apiClient.GetInbound(ctx, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-    client := inbound.GetClientByEmail(apiClient, "your-email-string") //client object is containing every field except for traffic info
-    //if you also need to get its traffic use:
-    apiClient.GetClientTrafficByEmail(ctx, client) //or GetClientTrafficByUUID
-
-}
-```
-### Creating new client
+Retrieve a list of all inbounds:
 
 ```go
-func main() {
-	cfg := api.Config{
-		BaseURL:         "https://your-host.com/your-panel-path",
-		Username:        "admin",
-		Password:        "admin",
-		SubscriptionURI: "your-subscription-path",
-		Port:            12345,
-	}
-
-	apiClient, err := api.NewApi(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-    inbound, err := apiClient.GetInbound(ctx, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-    
-    //creating new client object
-    client := &api.Client{
-		InboundId: inbound.ID,
-		Email:     "your-new-client@mail.mail",
-		Enable:    true,
-        ExpiryTime: api.UnixTime{Time: time.Now().AddDate(0, 1, 0)} //will be expired after 1 month
-	}
-	client.GenerateUUID() //generates unique uuid and subscription id
-	apiClient.AddClient(ctx, inbound, client) //adds client to the provided inbound
+inbounds, err := apiClient.ListInbounds(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+for _, inbound := range *inbounds {
+	log.Printf("Inbound ID: %d, Remark: %s", inbound.ID, inbound.Remark)
 }
 ```
 
-### Getting key or subscription link
+### Example: Adding a New Client
+
+Add a client to an existing inbound:
+
 ```go
-package main
-
-import (
-	"context"
-    "fmt"
-	"log"
-
-	api "github.com/SpiritFoxo/gox-ui"
-)
-
-func main() {
-	cfg := api.Config{
-		BaseURL:         "https://your-host.com/your-panel-path",
-		Username:        "admin",
-		Password:        "admin",
-		SubscriptionURI: "your-subscription-path",
-		Port:            12345,
-	}
-
-	apiClient, err := api.NewApi(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-    inbound, err := apiClient.GetInbound(ctx, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-    client := inbound.GetClientByEmail(apiClient, "your-email-string")
-
-    //getting subscription link
-    subscriptionLink, err := apiClient.GetSubscriptionLink(ctx, client)
-    if err != nil {
-        log.Fatal("error")
-    }
-    fmt.Println(subscriptionLink)
-
-    //getting client`s key
-    key, err := apiClient.GetKey(ctx, client)
-    if err != nil {
-        log.Fatal("error")
-    }
-    fmt.Println(key)
-
+inbound, err := apiClient.GetInbound(ctx, 1) // Replace 1 with your inbound ID
+if err != nil {
+	log.Fatal(err)
 }
+
+client := &api.Client{
+	Email:      "new-client@example.com",
+	Enable:     true,
+	ExpiryTime: api.UnixTime{Time: time.Now().AddDate(0, 1, 0)}, // Expires in 1 month
+	TotalGB:    10 * 1024 * 1024 * 1024,                         // 10 GB limit
+}
+err = client.GenerateUUID()
+if err != nil {
+	log.Fatal(err)
+}
+
+resp, err := apiClient.AddClient(ctx, inbound, client)
+if err != nil {
+	log.Fatal(err)
+}
+log.Printf("Client added: %s", resp.Msg)
 ```
 
+## Documentation
+
+For full API documentation, including all methods, structs, and examples, see [docs](https://github.com/SpiritFoxo/gox-ui/tree/main/docs).
